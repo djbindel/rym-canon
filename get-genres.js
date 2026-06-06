@@ -56,23 +56,23 @@ async function getGenres(file, type) {
     const primaryGenreEntries = genreEntries.filter(genreEntry => genreEntry.level === 'Primary');
     const secondaryGenreEntries = genreEntries.filter(genreEntry => genreEntry.level === 'Secondary');
 
-    // const threshold = require('./thresholds').tag;
-    const threshold = primaryGenreEntries[0].voteBalance;
+    const baseVoteBalance = primaryGenreEntries[0].voteBalance;
+    const threshold = require('./thresholds').tag;
 
     for (let genreEntry of genreEntries) {
-        genreEntry['differential'] = Math.abs(genreEntry.voteBalance - threshold);
+        genreEntry['differential'] = Math.abs(genreEntry.voteBalance - baseVoteBalance);
     }
 
     const changeDifferential = genreEntries[1] ? genreEntries.sort((a, b) => a.differential - b.differential)[1].differential : 0;
 
     function filterGenres() {
-        const primaryGenres = primaryGenreEntries.filter(genreEntry => genreEntry.voteBalance >= threshold).map(genreEntry => genreEntry.genre);
-        const secondaryGenres = secondaryGenreEntries.filter(genreEntry => genreEntry.voteBalance >= threshold).map(genreEntry => genreEntry.genre);
+        const primaryGenres = primaryGenreEntries.filter(genreEntry => genreEntry.voteBalance / baseVoteBalance > threshold).map(({ differential, ...genreEntry }) => genreEntry);
+        const secondaryGenres = secondaryGenreEntries.filter(genreEntry => genreEntry.voteBalance / baseVoteBalance > threshold).map(({ differential, ...genreEntry }) => genreEntry);
 
-        if (primaryGenres.length > 1) throw "Error: multiple primary genres";
+        // if (primaryGenres.length > 1) throw "Error: multiple primary genres";
 
         return {
-            primary: primaryGenres[0],
+            primary: primaryGenres,
             secondary: secondaryGenres,
             changeDifferential,
         };

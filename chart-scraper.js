@@ -90,7 +90,7 @@ function approximateReleaseDate(parsedReleaseDate) {
     }
 }
 
-async function readAndSaveData(dirname, startingPoint) {
+async function readAndSaveData(dirname, startingPoint, approximateDates) {
     let releases = [];
     const dir = await readdirAsync(dirname);
     for (file of dir) {
@@ -110,20 +110,20 @@ async function readAndSaveData(dirname, startingPoint) {
             const genre = $(this).find('.page_charts_section_charts_item_genres_primary').text().trim();
             const stats = $(this).find('.page_charts_section_charts_item_credited_links_rating_compact');
             const score = stats.find('.page_charts_section_charts_item_details_average_num').text().trim();
-            const ratingCount = stats.find('.page_charts_section_charts_item_details_ratings').find('.full').text().trim().replace(',','');
+            const ratingCount = stats.find('.page_charts_section_charts_item_details_ratings span.abbr').attr('data-tiptip').trim().replace(',','');
 
             const release = {
                 id,
                 listing: `${Number(startingPoint) + Number(listing)}`,
-                ...(chart === 'Album' && { artistId }),
+                // ...(chart === 'Album' && { artistId }),
                 score,
-                // ratingCount,
-                ...(chart === 'Album' || chart === 'Film' && {
-                    year: approxReleaseDate['year'],
-                    month: approxReleaseDate['month'],
-                    day: approxReleaseDate['day'],
+                ratingCount,
+                ...((chart === 'Album' || chart === 'Film') && {
+                    year: approximateDates ? approxReleaseDate['year'] : parsedReleaseDate[3],
+                    month: approximateDates ? approxReleaseDate['month'] : months[parsedReleaseDate[2]] || '',
+                    day: approximateDates ? approxReleaseDate['day'] : parsedReleaseDate[1],
                 }),
-                ...(chart === 'Song' && { genre }),
+                // ...(chart === 'Song' && { genre }),
             };
             console.log(release);
             releases.push(release);
@@ -150,5 +150,5 @@ async function readAndSaveData(dirname, startingPoint) {
 // db.on('error', console.error.bind(console, 'connection error:'));
 // db.once('open', () => {
 //     console.log('Connected!');
-    readAndSaveData(`./charts/${chart}`, startingPoint);
+    readAndSaveData(`./charts/${chart}`, startingPoint, false);
 // });
